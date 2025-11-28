@@ -13,6 +13,7 @@ import type {
   NightOwlAnalysis,
   DragonKingAnalysis,
   DivingAnalysis,
+  MonologueAnalysis,
 } from '../../src/types/chat'
 
 interface TimeFilter {
@@ -45,6 +46,7 @@ interface ChatApi {
   getNightOwlAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<NightOwlAnalysis>
   getDragonKingAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<DragonKingAnalysis>
   getDivingAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<DivingAnalysis>
+  getMonologueAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<MonologueAnalysis>
 }
 
 interface Api {

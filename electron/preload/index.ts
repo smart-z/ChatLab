@@ -14,6 +14,7 @@ import type {
   NightOwlAnalysis,
   DragonKingAnalysis,
   DivingAnalysis,
+  MonologueAnalysis,
 } from '../../src/types/chat'
 
 // Custom APIs for renderer
@@ -211,6 +212,16 @@ const chatApi = {
     filter?: { startTs?: number; endTs?: number }
   ): Promise<DivingAnalysis> => {
     return ipcRenderer.invoke('chat:getDivingAnalysis', sessionId, filter)
+  },
+
+  /**
+   * 获取自言自语分析数据
+   */
+  getMonologueAnalysis: (
+    sessionId: string,
+    filter?: { startTs?: number; endTs?: number }
+  ): Promise<MonologueAnalysis> => {
+    return ipcRenderer.invoke('chat:getMonologueAnalysis', sessionId, filter)
   },
 }
 

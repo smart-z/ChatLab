@@ -457,6 +457,21 @@ const mainIpcMain = (win: BrowserWindow) => {
       }
     }
   )
+
+  /**
+   * 获取自言自语分析数据
+   */
+  ipcMain.handle(
+    'chat:getMonologueAnalysis',
+    async (_, sessionId: string, filter?: { startTs?: number; endTs?: number }) => {
+      try {
+        return database.getMonologueAnalysis(sessionId, filter)
+      } catch (error) {
+        console.error('获取自言自语分析失败：', error)
+        return { rank: [], maxComboRecord: null }
+      }
+    }
+  )
 }
 
 export default mainIpcMain

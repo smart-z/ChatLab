@@ -21,6 +21,7 @@ export {
   getNightOwlAnalysis,
   getDragonKingAnalysis,
   getDivingAnalysis,
+  getMonologueAnalysis,
 } from './analysis'
 
 // 类型导出
