@@ -28,6 +28,7 @@ const conversations = ref<Conversation[]>([])
 const isLoading = ref(false)
 const editingId = ref<string | null>(null)
 const editingTitle = ref('')
+const isCollapsed = ref(false)
 
 // 加载对话列表
 async function loadConversations() {
@@ -113,22 +114,43 @@ defineExpose({
 </script>
 
 <template>
-  <div class="flex h-full w-64 flex-col">
+  <div
+    class="flex flex-col border-r border-gray-200 bg-white transition-all dark:border-gray-800 dark:bg-gray-900"
+    :class="isCollapsed ? 'w-10' : 'w-64'"
+  >
     <!-- 头部 -->
-    <div class="flex items-center justify-between px-2 py-4">
-      <span class="text-xs font-semibold tracking-wider text-gray-400 uppercase">AI对话记录</span>
-      <UButton
-        icon="i-heroicons-plus"
-        color="gray"
-        variant="ghost"
-        size="xs"
-        class="text-gray-500 hover:text-gray-900 dark:hover:text-white"
-        @click="emit('create')"
-      />
+    <div class="flex items-center justify-between border-b border-gray-200 p-2 dark:border-gray-800">
+      <template v-if="!isCollapsed">
+        <span class="text-xs font-medium text-gray-500 dark:text-gray-400">AI对话记录</span>
+        <div class="flex items-center gap-1">
+          <UButton
+            icon="i-heroicons-plus"
+            color="gray"
+            variant="ghost"
+            size="xs"
+            class="text-gray-500 hover:text-gray-900 dark:hover:text-white"
+            @click="emit('create')"
+          />
+          <button
+            class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+            @click="isCollapsed = !isCollapsed"
+          >
+            <UIcon name="i-heroicons-chevron-left" class="h-4 w-4" />
+          </button>
+        </div>
+      </template>
+      <template v-else>
+        <button
+          class="mx-auto rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+          @click="isCollapsed = !isCollapsed"
+        >
+          <UIcon name="i-heroicons-chevron-right" class="h-4 w-4" />
+        </button>
+      </template>
     </div>
 
-    <!-- 对话列表 -->
-    <div class="flex-1 overflow-y-auto px-2">
+    <!-- 展开状态列表 -->
+    <div v-if="!isCollapsed" class="flex-1 overflow-y-auto p-2">
       <!-- 加载中 -->
       <div v-if="isLoading" class="flex items-center justify-center py-8">
         <UIcon name="i-heroicons-arrow-path" class="h-5 w-5 animate-spin text-gray-400" />
@@ -208,6 +230,33 @@ defineExpose({
           </template>
         </div>
       </div>
+    </div>
+
+    <!-- 折叠状态列表 -->
+    <div v-else class="flex flex-1 flex-col items-center gap-2 overflow-y-auto py-2">
+      <!-- 新建按钮 -->
+      <button
+        class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-pink-500 dark:hover:bg-gray-800"
+        title="开始新对话"
+        @click="emit('create')"
+      >
+        <UIcon name="i-heroicons-plus" class="h-4 w-4" />
+      </button>
+
+      <!-- 分隔线 -->
+      <div class="h-px w-6 bg-gray-200 dark:bg-gray-800"></div>
+
+      <!-- 对话列表图标 -->
+      <button
+        v-for="conv in conversations"
+        :key="conv.id"
+        class="rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+        :class="[activeId === conv.id ? 'text-pink-500' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+        :title="getTitle(conv)"
+        @click="emit('select', conv.id)"
+      >
+        <UIcon name="i-heroicons-chat-bubble-left" class="h-4 w-4" />
+      </button>
     </div>
   </div>
 </template>

@@ -6,14 +6,12 @@ import { storeToRefs } from 'pinia'
 import type { AnalysisSession, MemberActivity, HourlyActivity, DailyActivity, MessageType } from '@/types/chat'
 import { formatDateRange } from '@/utils'
 import UITabs from '@/components/UI/Tabs.vue'
-import OverviewTab from '@/components/analysis/OverviewTab.vue'
-import RankingTab from '@/components/analysis/RankingTab.vue'
-import TimelineTab from '@/components/analysis/TimelineTab.vue'
-import QuotesTab from '@/components/analysis/QuotesTab.vue'
-import RelationshipsTab from '@/components/analysis/RelationshipsTab.vue'
 import AITab from '@/components/analysis/AITab.vue'
-import MemberTab from '@/components/analysis/MemberTab.vue'
-import SQLLabTab from '@/components/analysis/SQLLabTab.vue'
+import OverviewTab from './components/OverviewTab.vue'
+import RankingTab from './components/RankingTab.vue'
+import QuotesTab from './components/QuotesTab.vue'
+import RelationshipsTab from './components/RelationshipsTab.vue'
+import MemberTab from './components/MemberTab.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -34,16 +32,14 @@ const availableYears = ref<number[]>([])
 const selectedYear = ref<number>(0) // 0 表示全部
 const isInitialLoad = ref(true) // 用于跳过初始加载时的 watch 触发，并控制首屏加载状态
 
-// Tab 配置
+// Tab 配置（SQL实验室已整合到AI实验室中，趋势已合并到总览）
 const tabs = [
   { id: 'overview', label: '总览', icon: 'i-heroicons-chart-pie' },
   { id: 'ranking', label: '群榜单', icon: 'i-heroicons-trophy' },
   { id: 'quotes', label: '群语录', icon: 'i-heroicons-chat-bubble-bottom-center-text' },
   { id: 'relationships', label: '群关系', icon: 'i-heroicons-heart' },
-  { id: 'timeline', label: '群趋势', icon: 'i-heroicons-chart-bar' },
   { id: 'members', label: '群成员', icon: 'i-heroicons-user-group' },
   { id: 'ai', label: 'AI实验室', icon: 'i-heroicons-sparkles' },
-  { id: 'sql', label: 'SQL实验室', icon: 'i-heroicons-command-line' },
 ]
 
 const activeTab = ref((route.query.tab as string) || 'overview')
@@ -308,6 +304,7 @@ onMounted(() => {
               :bottom-members="bottomMembers"
               :message-types="messageTypes"
               :hourly-activity="hourlyActivity"
+              :daily-activity="dailyActivity"
               :time-range="timeRange"
               :selected-year="selectedYear"
               :filtered-message-count="filteredMessageCount"
@@ -335,15 +332,6 @@ onMounted(() => {
               :session-id="currentSessionId!"
               :time-filter="timeFilter"
             />
-            <TimelineTab
-              v-else-if="activeTab === 'timeline'"
-              :key="'timeline-' + selectedYear"
-              :session-id="currentSessionId!"
-              :daily-activity="dailyActivity"
-              :member-activity="memberActivity"
-              :time-range="timeRange"
-              :time-filter="timeFilter"
-            />
             <MemberTab
               v-else-if="activeTab === 'members'"
               :key="'members-' + selectedYear"
@@ -358,7 +346,6 @@ onMounted(() => {
               :time-filter="timeFilter"
               chat-type="group"
             />
-            <SQLLabTab v-else-if="activeTab === 'sql'" :key="'sql-' + selectedYear" :session-id="currentSessionId!" />
           </Transition>
         </div>
       </div>
@@ -389,3 +376,4 @@ onMounted(() => {
   transform: translateY(-10px);
 }
 </style>
+

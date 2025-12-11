@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import type { MemberWithStats } from '@/types/chat'
+import type { MemberWithStats, MemberNameHistory } from '@/types/chat'
+import { SectionCard, EmptyState, LoadingState } from '@/components/UI'
+import { formatPeriod } from '@/utils'
 
 // Props
 const props = defineProps<{
@@ -153,6 +155,48 @@ async function confirmDelete() {
   }
 }
 
+// ==================== 昵称变更记录 ====================
+interface MemberWithHistory {
+  memberId: number
+  name: string
+  history: MemberNameHistory[]
+}
+
+const membersWithNicknameChanges = ref<MemberWithHistory[]>([])
+const isLoadingHistory = ref(false)
+
+async function loadMembersWithNicknameChanges() {
+  if (!props.sessionId || members.value.length === 0) return
+
+  isLoadingHistory.value = true
+  const membersWithChanges: MemberWithHistory[] = []
+
+  try {
+    const historyPromises = members.value.map((member) =>
+      window.chatApi.getMemberNameHistory(props.sessionId, member.id)
+    )
+
+    const allHistories = await Promise.all(historyPromises)
+
+    members.value.forEach((member, index) => {
+      const history = allHistories[index]
+      if (history.length > 1) {
+        membersWithChanges.push({
+          memberId: member.id,
+          name: getDisplayName(member),
+          history,
+        })
+      }
+    })
+
+    membersWithNicknameChanges.value = membersWithChanges
+  } catch (error) {
+    console.error('加载昵称变更记录失败:', error)
+  } finally {
+    isLoadingHistory.value = false
+  }
+}
+
 // 搜索时重置页码
 watch(searchQuery, () => {
   currentPage.value = 1
@@ -167,6 +211,16 @@ watch(
     currentPage.value = 1
   },
   { immediate: true }
+)
+
+// 成员加载完成后加载昵称变更记录
+watch(
+  () => members.value.length,
+  () => {
+    if (members.value.length > 0) {
+      loadMembersWithNicknameChanges()
+    }
+  }
 )
 
 onMounted(() => {
@@ -347,6 +401,55 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- 昵称变更记录 -->
+    <SectionCard
+      class="mt-6"
+      title="昵称变更记录"
+      :description="
+        isLoadingHistory
+          ? '加载中...'
+          : membersWithNicknameChanges.length > 0
+            ? `${membersWithNicknameChanges.length} 位成员曾修改过昵称`
+            : '暂无成员修改昵称'
+      "
+    >
+      <div
+        v-if="!isLoadingHistory && membersWithNicknameChanges.length > 0"
+        class="divide-y divide-gray-100 dark:divide-gray-800"
+      >
+        <div
+          v-for="member in membersWithNicknameChanges"
+          :key="member.memberId"
+          class="flex items-start gap-3 px-5 py-3"
+        >
+          <div class="w-32 shrink-0 pt-0.5 font-medium text-gray-900 dark:text-white">
+            {{ member.name }}
+          </div>
+
+          <div class="flex flex-1 flex-wrap items-center gap-2">
+            <template v-for="(item, index) in member.history" :key="index">
+              <div class="flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 dark:bg-gray-800">
+                <span
+                  class="text-sm"
+                  :class="item.endTs === null ? 'font-semibold text-pink-600' : 'text-gray-700 dark:text-gray-300'"
+                >
+                  {{ item.name }}
+                </span>
+                <UBadge v-if="item.endTs === null" color="primary" variant="soft" size="xs">当前</UBadge>
+                <span class="text-xs text-gray-400">({{ formatPeriod(item.startTs, item.endTs) }})</span>
+              </div>
+
+              <span v-if="index < member.history.length - 1" class="text-gray-300 dark:text-gray-600">→</span>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <EmptyState v-else-if="!isLoadingHistory" text="该群组所有成员均未修改过昵称" />
+
+      <LoadingState v-else text="正在加载昵称变更记录..." />
+    </SectionCard>
+
     <!-- 删除确认弹窗 -->
     <UModal :open="!!deletingMember" @update:open="deletingMember = null" :ui="{ content: 'max-w-sm' }">
       <template #content>
@@ -373,3 +476,4 @@ onMounted(() => {
     </UModal>
   </div>
 </template>
+

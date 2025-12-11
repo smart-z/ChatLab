@@ -6,12 +6,10 @@ import { storeToRefs } from 'pinia'
 import type { AnalysisSession, MemberActivity, HourlyActivity, DailyActivity, MessageType } from '@/types/chat'
 import { formatDateRange } from '@/utils'
 import UITabs from '@/components/UI/Tabs.vue'
-import PrivateOverviewTab from '@/components/analysis/PrivateOverviewTab.vue'
-import PrivateTimelineTab from '@/components/analysis/PrivateTimelineTab.vue'
-import PrivateQuotesTab from '@/components/analysis/PrivateQuotesTab.vue'
-import PrivateMemberTab from '@/components/analysis/PrivateMemberTab.vue'
 import AITab from '@/components/analysis/AITab.vue'
-import SQLLabTab from '@/components/analysis/SQLLabTab.vue'
+import OverviewTab from './components/OverviewTab.vue'
+import QuotesTab from './components/QuotesTab.vue'
+import MemberTab from './components/MemberTab.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,14 +30,12 @@ const availableYears = ref<number[]>([])
 const selectedYear = ref<number>(0) // 0 表示全部
 const isInitialLoad = ref(true) // 用于跳过初始加载时的 watch 触发，并控制首屏加载状态
 
-// Tab 配置 - 私聊有总览、趋势、语录、成员、AI 和 SQL
+// Tab 配置 - 私聊有总览、语录、成员、AI实验室（趋势已合并到总览）
 const tabs = [
   { id: 'overview', label: '总览', icon: 'i-heroicons-chart-pie' },
-  { id: 'timeline', label: '趋势', icon: 'i-heroicons-chart-bar' },
   { id: 'quotes', label: '语录', icon: 'i-heroicons-chat-bubble-left-right' },
   { id: 'member', label: '成员', icon: 'i-heroicons-user-group' },
   { id: 'ai', label: 'AI实验室', icon: 'i-heroicons-sparkles' },
-  { id: 'sql', label: 'SQL实验室', icon: 'i-heroicons-command-line' },
 ]
 
 const activeTab = ref((route.query.tab as string) || 'overview')
@@ -276,35 +272,27 @@ onMounted(() => {
 
         <div class="h-full">
           <Transition name="tab-slide" mode="out-in">
-            <PrivateOverviewTab
+            <OverviewTab
               v-if="activeTab === 'overview'"
               :key="'overview-' + selectedYear"
               :session="session"
               :member-activity="memberActivity"
               :message-types="messageTypes"
               :hourly-activity="hourlyActivity"
+              :daily-activity="dailyActivity"
               :time-range="timeRange"
               :selected-year="selectedYear"
               :filtered-message-count="filteredMessageCount"
               :filtered-member-count="filteredMemberCount"
               :time-filter="timeFilter"
             />
-            <PrivateTimelineTab
-              v-else-if="activeTab === 'timeline'"
-              :key="'timeline-' + selectedYear"
-              :session-id="currentSessionId!"
-              :daily-activity="dailyActivity"
-              :member-activity="memberActivity"
-              :time-range="timeRange"
-              :time-filter="timeFilter"
-            />
-            <PrivateQuotesTab
+            <QuotesTab
               v-else-if="activeTab === 'quotes'"
               :key="'quotes-' + selectedYear"
               :session-id="currentSessionId!"
               :time-filter="timeFilter"
             />
-            <PrivateMemberTab
+            <MemberTab
               v-else-if="activeTab === 'member'"
               :key="'member'"
               :session-id="currentSessionId!"
@@ -316,11 +304,6 @@ onMounted(() => {
               :session-name="session.name"
               :time-filter="timeFilter"
               chat-type="private"
-            />
-            <SQLLabTab
-              v-else-if="activeTab === 'sql'"
-              :key="'sql-' + selectedYear"
-              :session-id="currentSessionId!"
             />
           </Transition>
         </div>
@@ -352,3 +335,4 @@ onMounted(() => {
   transform: translateY(-10px);
 }
 </style>
+

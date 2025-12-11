@@ -2,9 +2,10 @@
 import { ref } from 'vue'
 import { SubTabs } from '@/components/UI'
 import ChatExplorer from './ai/ChatExplorer.vue'
+import SQLLabTab from './SQLLabTab.vue'
 
 // Props
-defineProps<{
+const props = defineProps<{
   sessionId: string
   sessionName: string
   timeFilter?: { startTs: number; endTs: number }
@@ -14,9 +15,31 @@ defineProps<{
 // 子 Tab 配置
 const subTabs = [
   { id: 'chat-explorer', label: '对话式探索', icon: 'i-heroicons-chat-bubble-left-ellipsis' },
-  { id: 'manual', label: '筛选分析', icon: 'i-heroicons-adjustments-horizontal' },
-  { id: 'sql', label: 'AI SQL', icon: 'i-heroicons-beaker' },
-  { id: 'mbti', label: 'MBTI检测仪', icon: 'i-heroicons-heart' },
+  { id: 'sql-lab', label: 'SQL实验室', icon: 'i-heroicons-command-line' },
+  {
+    id: 'manual',
+    label: '筛选分析',
+    desc: '计划实现高级筛选功能，可以先按人/按时间/按搜索内容手动筛选，然后再进行AI分析',
+    icon: 'i-heroicons-adjustments-horizontal',
+  },
+  {
+    id: 'mbti',
+    label: 'MBTI鉴定',
+    desc: '计划选中成员，然后根据聊天记录以及上下文分析TA的MBTI',
+    icon: 'i-heroicons-heart',
+  },
+  {
+    id: 'cyber-friend',
+    label: '赛博群友计划',
+    desc: '思路：指定某个群友，然后根据聊天记录分析群友的特征，包括口头禅、表情包和标点风格、什么话题他会出现之类的，将这些分析结果打包为系统提示词，并注入AI，就生成了一个赛博群友。实际上可能要复杂一些，但是应该会很好玩。',
+    icon: 'i-heroicons-cpu-chip',
+  },
+  {
+    id: 'campus',
+    label: '阵营9宫格',
+    desc: '和朋友们聊天的时候产生的一个有趣的想法，群里偶尔会很认真的讨论某个话题，大家都聊的很认真，那么是不是可以让AI分析聊天记录，然后针对这个话题，让AI用 守序善良/绝对中立/守序邪恶/混乱邪恶这样的九宫格把群友划分到对应的格子里面',
+    icon: 'i-heroicons-squares-2x2',
+  },
 ]
 
 const activeSubTab = ref('chat-explorer')
@@ -38,7 +61,7 @@ defineExpose({
 <template>
   <div class="flex h-full flex-col">
     <!-- 子 Tab 导航 -->
-    <SubTabs class="hidden" v-model="activeSubTab" :items="subTabs" />
+    <SubTabs v-model="activeSubTab" :items="subTabs" />
 
     <!-- 子 Tab 内容 -->
     <div class="flex-1 min-h-0 overflow-hidden">
@@ -54,55 +77,41 @@ defineExpose({
           :chat-type="chatType"
         />
 
-        <!-- 实验室 - 暂未实现 -->
-        <div v-else-if="activeSubTab === 'lab'" class="flex h-full items-center justify-center p-6">
+        <!-- 暂未实现的功能 -->
+        <div
+          v-else-if="['manual', 'mbti', 'cyber-friend', 'campus'].includes(activeSubTab)"
+          class="flex h-full items-center justify-center p-6"
+        >
           <div
             class="flex h-full w-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50"
           >
             <div class="text-center">
-              <UIcon name="i-heroicons-beaker" class="mx-auto h-12 w-12 text-gray-400" />
-              <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400">实验室功能开发中</p>
-              <p class="mt-1 text-xs text-gray-400">敬请期待...</p>
+              <UIcon :name="subTabs.find((t) => t.id === activeSubTab)?.icon" class="mx-auto h-12 w-12 text-gray-400" />
+              <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400">
+                {{ subTabs.find((t) => t.id === activeSubTab)?.label }}功能开发中
+              </p>
+              <p class="mt-1 max-w-md px-4 text-sm text-gray-500">
+                {{ subTabs.find((t) => t.id === activeSubTab)?.desc || '敬请期待...' }}
+              </p>
+
+              <div class="mt-8 flex items-center justify-center gap-1 text-xs text-gray-400">
+                <span>功能上线通知，欢迎关注我的小红书</span>
+                <UButton
+                  to="https://www.xiaohongshu.com/user/profile/6841741e000000001d0091b4"
+                  target="_blank"
+                  variant="link"
+                  :padded="false"
+                  class="text-xs font-medium"
+                >
+                  @地瓜
+                </UButton>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- 筛选分析 - 暂未实现 -->
-        <div v-else-if="activeSubTab === 'manual'" class="flex h-full items-center justify-center p-6">
-          <div
-            class="flex h-full w-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50"
-          >
-            <div class="text-center">
-              <UIcon name="i-heroicons-adjustments-horizontal" class="mx-auto h-12 w-12 text-gray-400" />
-              <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400">筛选分析功能开发中</p>
-              <p class="mt-1 text-xs text-gray-400">敬请期待...</p>
-            </div>
-          </div>
-        </div>
-        <!-- AI SQL -->
-        <div v-else-if="activeSubTab === 'sql'" class="flex h-full items-center justify-center p-6">
-          <div
-            class="flex h-full w-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50"
-          >
-            <div class="text-center">
-              <UIcon name="i-heroicons-beaker" class="mx-auto h-12 w-12 text-gray-400" />
-              <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400">开发中</p>
-              <p class="mt-1 text-xs text-gray-400">敬请期待...</p>
-            </div>
-          </div>
-        </div>
-        <!-- MBTI检测仪 -->
-        <div v-else-if="activeSubTab === 'mbti'" class="flex h-full items-center justify-center p-6">
-          <div
-            class="flex h-full w-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50"
-          >
-            <div class="text-center">
-              <UIcon name="i-heroicons-beaker" class="mx-auto h-12 w-12 text-gray-400" />
-              <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400">开发中</p>
-              <p class="mt-1 text-xs text-gray-400">敬请期待...</p>
-            </div>
-          </div>
-        </div>
+        <!-- SQL 实验室 -->
+        <SQLLabTab v-else-if="activeSubTab === 'sql-lab'" class="h-full" :session-id="props.sessionId" />
       </Transition>
     </div>
   </div>

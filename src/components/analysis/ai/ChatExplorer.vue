@@ -224,17 +224,15 @@ watch(
 <template>
   <div class="flex h-full overflow-hidden">
     <!-- 左侧：对话记录列表 -->
-    <div class="w-64 shrink-0 border-r border-gray-200 bg-gray-50/50 dark:border-gray-800 dark:bg-gray-900/50">
-      <ConversationList
-        ref="conversationListRef"
-        :session-id="sessionId"
-        :active-id="currentConversationId"
-        @select="handleSelectConversation"
-        @create="handleCreateConversation"
-        @delete="handleDeleteConversation"
-        class="h-full"
-      />
-    </div>
+    <ConversationList
+      ref="conversationListRef"
+      :session-id="sessionId"
+      :active-id="currentConversationId"
+      @select="handleSelectConversation"
+      @create="handleCreateConversation"
+      @delete="handleDeleteConversation"
+      class="h-full shrink-0"
+    />
 
     <!-- 中间：对话区域 -->
     <div class="flex h-full flex-1">

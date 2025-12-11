@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { SubTabs } from '@/components/UI'
-import { CatchphraseTab, HotRepeatTab, KeywordAnalysis } from './quotes'
+import { CatchphraseTab, HotRepeatTab, KeywordAnalysis } from '@/components/analysis/quotes'
 
 interface TimeFilter {
   startTs?: number
@@ -65,3 +65,4 @@ const activeSubTab = ref('catchphrase')
   opacity: 0;
 }
 </style>
+
