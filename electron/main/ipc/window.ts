@@ -59,6 +59,17 @@ export function registerWindowHandlers(ctx: IpcContext): void {
     return app.getVersion()
   })
 
+  // 获取动态文案配置
+  ipcMain.handle('app:fetchRemoteConfig', async (_, url: string) => {
+    try {
+      const response = await fetch(url)
+      const data = await response.json()
+      return { success: true, data }
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
   // ==================== 更新检查 ====================
   ipcMain.on('check-update', () => {
     autoUpdater.checkForUpdates()

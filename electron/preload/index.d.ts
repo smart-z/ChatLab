@@ -88,6 +88,7 @@ interface Api {
     getVersion: () => Promise<string>
     checkUpdate: () => void
     simulateUpdate: () => void
+    fetchRemoteConfig: (url: string) => Promise<{ success: boolean; data?: unknown; error?: string }>
   }
 }
 

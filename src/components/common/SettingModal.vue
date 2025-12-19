@@ -126,14 +126,13 @@ onMounted(() => {
             <AIConfigTab ref="aiConfigRef" @config-changed="handleAIConfigChanged" />
           </div>
 
-          <!-- 系统提示词配置 Tab -->
+          <!-- AI对话配置 Tab -->
           <div v-show="activeTab === 'ai-prompt'" class="pr-1">
             <AIPromptConfigTab @config-changed="handleAIConfigChanged" />
           </div>
 
           <!-- 设置 Tab -->
           <div v-show="activeTab === 'settings'" class="space-y-6 pr-1">
-            <!-- 缓存管理 -->
             <CacheManageTab ref="cacheManageRef" />
           </div>
 

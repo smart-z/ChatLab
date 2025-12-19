@@ -995,6 +995,12 @@ const extendedApi = {
     simulateUpdate: (): void => {
       ipcRenderer.send('simulate-update')
     },
+    /**
+     * 获取远程配置（通过主进程请求，绕过 CORS）
+     */
+    fetchRemoteConfig: (url: string): Promise<{ success: boolean; data?: unknown; error?: string }> => {
+      return ipcRenderer.invoke('app:fetchRemoteConfig', url)
+    },
   },
 }
 

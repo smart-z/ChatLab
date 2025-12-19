@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import AIConfigEditModal from './AIConfigEditModal.vue'
+import AlertTips from './AlertTips.vue'
 
 // Emits
 const emit = defineEmits<{
@@ -28,6 +29,8 @@ interface Provider {
   defaultBaseUrl: string
   models: Array<{ id: string; name: string; description?: string }>
 }
+
+const aiTips = JSON.parse(localStorage.getItem('chatlab_app_config') || '{}').aiTips || {}
 
 // ============ 状态 ============
 
@@ -135,11 +138,7 @@ onMounted(() => {
 
   <!-- 配置列表视图 -->
   <div v-else class="space-y-4">
-    <UAlert v-if="configs.length === 0" color="error" variant="outline" icon="i-lucide-terminal" class="p-2">
-      <template #title>
-        <p>建议优先配置本地模型，分析聊天记录更加安全，个人实测qwen3-8B小模型也能满足分析需求</p>
-      </template>
-    </UAlert>
+    <AlertTips v-if="configs.length === 0 && aiTips.configTab?.show" :content="aiTips.configTab?.content" />
     <!-- 配置列表 -->
     <div v-if="configs.length > 0" class="space-y-2">
       <div

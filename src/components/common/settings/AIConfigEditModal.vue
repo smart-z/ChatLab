@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import AlertTips from './AlertTips.vue'
 
 // ============ 类型定义 ============
 
@@ -26,6 +27,8 @@ interface Provider {
 
 // 三种配置类型
 type ConfigType = 'preset' | 'local' | 'openai-compatible'
+
+const aiTips = JSON.parse(localStorage.getItem('chatlab_app_config') || '{}').aiTips || {}
 
 // ============ Props & Emits ============
 
@@ -595,6 +598,13 @@ watch(
 
           <!-- ========== OpenAI 兼容配置 ========== -->
           <template v-else>
+            <!-- 风险提示 -->
+            <AlertTips
+              v-if="aiTips.thirdPartyApi?.show"
+              icon="i-heroicons-exclamation-triangle"
+              :content="aiTips.thirdPartyApi?.content"
+            />
+
             <!-- API 端点 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">API 端点</label>
