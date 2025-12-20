@@ -178,7 +178,7 @@ function getSessionAvatarText(session: AnalysisSession): string {
       </UTooltip>
 
       <!-- Tools Button -->
-      <UTooltip :text="isCollapsed ? '实用工具' : ''" :popper="{ placement: 'right' }" hidden>
+      <UTooltip :text="isCollapsed ? '实用工具' : ''" :popper="{ placement: 'right' }">
         <UButton
           :block="!isCollapsed"
           class="transition-all rounded-full hover:bg-gray-200/60 dark:hover:bg-gray-800 h-12 cursor-pointer mt-2"

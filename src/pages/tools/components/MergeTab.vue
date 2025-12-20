@@ -42,11 +42,18 @@ const files = ref<FileInfo[]>([])
 const conflicts = ref<MergeConflict[]>([])
 const outputName = ref('')
 const outputDir = ref('')
+const outputFormat = ref<'json' | 'jsonl'>('json')
 const isLoading = ref(false)
 const isMerging = ref(false)
 const mergeProgress = ref(0)
 const currentStep = ref<'select' | 'conflict' | 'done'>('select')
 const outputFilePath = ref('')
+
+// 输出格式选项
+const formatOptions = [
+  { value: 'json', label: 'JSON', description: '标准格式，兼容性好' },
+  { value: 'jsonl', label: 'JSONL', description: '流式格式，支持超大文件' },
+]
 
 // 分页相关
 const currentPage = ref(1)
@@ -147,7 +154,7 @@ async function handleClickSelect() {
     const result = await window.api.dialog.showOpenDialog({
       title: '选择聊天记录文件',
       filters: [
-        { name: '聊天记录', extensions: ['json', 'txt'] },
+        { name: '聊天记录', extensions: ['json', 'jsonl', 'txt'] },
         { name: '所有文件', extensions: ['*'] },
       ],
       properties: ['openFile', 'multiSelections'],
@@ -251,6 +258,7 @@ async function executeMerge() {
     filePaths,
     outputName: outputName.value || '合并的聊天记录',
     outputDir: outputDir.value || undefined,
+    outputFormat: outputFormat.value,
     conflictResolutions: resolutions,
     andAnalyze: false,
   })
@@ -283,12 +291,14 @@ function reset() {
   conflicts.value = []
   outputName.value = ''
   outputDir.value = ''
+  outputFormat.value = 'json'
   currentStep.value = 'select'
   mergeProgress.value = 0
 }
 
 // 获取格式图标
 function getFormatIcon(format: string): string {
+  if (format.includes('JSONL')) return 'i-heroicons-bars-3-bottom-left'
   if (format.includes('JSON')) return 'i-heroicons-code-bracket'
   if (format.includes('TXT')) return 'i-heroicons-document-text'
   if (format.includes('ChatLab')) return 'i-heroicons-sparkles'
@@ -345,7 +355,7 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
         <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
           <h2 class="font-semibold text-gray-900 dark:text-white">合并聊天记录</h2>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            将多个聊天记录文件合并为一个，支持 QQ JSON、TXT 和 ChatLab 格式
+            将多个聊天记录文件合并为一个，支持 JSON、JSONL、TXT 等多种格式
           </p>
         </div>
 
@@ -406,7 +416,7 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
           </div>
 
           <!-- 拖拽上传区域 -->
-          <FileDropZone multiple :accept="['.json', '.txt']" :disabled="isLoading" @files="handleFileDrop">
+          <FileDropZone multiple :accept="['.json', '.jsonl', '.txt']" :disabled="isLoading" @files="handleFileDrop">
             <template #default="{ isDragOver }">
               <div
                 class="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 px-6 py-6 transition-all hover:border-primary-400 hover:bg-primary-50/50 dark:border-gray-600 dark:hover:border-primary-500 dark:hover:bg-primary-900/10"
@@ -424,7 +434,7 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
                 <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">
                   {{ isDragOver ? '松开以添加文件' : '拖拽文件到这里，或点击选择' }}
                 </p>
-                <p class="mt-1 text-xs text-gray-400">支持 .json 和 .txt 格式</p>
+                <p class="mt-1 text-xs text-gray-400">支持 .json、.jsonl 和 .txt 格式</p>
               </div>
             </template>
           </FileDropZone>
@@ -447,6 +457,34 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
               <div class="flex gap-2">
                 <UInput v-model="outputDir" placeholder="默认保存到文档/ChatLab/merged/" class="flex-1" readonly />
                 <UButton icon="i-heroicons-folder" variant="soft" @click="selectOutputDir">选择</UButton>
+              </div>
+            </div>
+
+            <!-- 输出格式 -->
+            <div>
+              <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">输出格式</label>
+              <div class="flex gap-3">
+                <label
+                  v-for="opt in formatOptions"
+                  :key="opt.value"
+                  class="flex flex-1 cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-colors"
+                  :class="[
+                    outputFormat === opt.value
+                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                      : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600',
+                  ]"
+                >
+                  <input
+                    v-model="outputFormat"
+                    type="radio"
+                    :value="opt.value"
+                    class="h-4 w-4 text-primary-600"
+                  />
+                  <div>
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ opt.label }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ opt.description }}</div>
+                  </div>
+                </label>
               </div>
             </div>
           </div>

@@ -181,7 +181,7 @@ function getProgressDetail(): string {
         <div class="flex flex-col items-center space-y-6">
           <!-- Import Drop Zone -->
           <FileDropZone
-            :accept="['.json', '.txt']"
+            :accept="['.json', '.jsonl', '.txt']"
             :disabled="isImporting"
             class="w-full max-w-4xl"
             @files="handleFileDrop"

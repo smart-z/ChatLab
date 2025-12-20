@@ -896,12 +896,18 @@ export interface ConflictResolution {
 }
 
 /**
+ * 输出格式类型
+ */
+export type OutputFormat = 'json' | 'jsonl'
+
+/**
  * 合并参数
  */
 export interface MergeParams {
   filePaths: string[]
   outputName: string
   outputDir?: string
+  outputFormat?: OutputFormat // 输出格式，默认 'json'
   conflictResolutions: ConflictResolution[]
   andAnalyze: boolean
 }

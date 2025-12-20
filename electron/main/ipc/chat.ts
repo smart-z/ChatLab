@@ -27,7 +27,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
         defaultPath: app.getPath('documents'),
         properties: ['openFile'],
         filters: [
-          { name: '聊天记录', extensions: ['json', 'txt'] },
+          { name: '聊天记录', extensions: ['json', 'jsonl', 'txt'] },
           { name: '所有文件', extensions: ['*'] },
         ],
         buttonLabel: '导入',

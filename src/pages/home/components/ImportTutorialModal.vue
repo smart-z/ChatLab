@@ -113,7 +113,7 @@ function openExternalLink(url: string) {
                 >
                   2
                 </span>
-                <span>导出完成后会得到 .json 文件</span>
+                <span>导出完成后会得到 .json 或 .jsonl 文件</span>
               </li>
               <li class="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
                 <span
@@ -121,7 +121,7 @@ function openExternalLink(url: string) {
                 >
                   3
                 </span>
-                <span>将 .json 文件拖拽到上方导入区域</span>
+                <span>将文件拖拽到上方导入区域</span>
               </li>
             </ol>
           </div>
@@ -155,7 +155,7 @@ function openExternalLink(url: string) {
                 >
                   3
                 </span>
-                <span>将转换后的 .json 文件拖拽到上方导入区域</span>
+                <span>将转换后的 .json 或 .jsonl 文件拖拽到上方导入区域</span>
               </li>
             </ol>
             <UButton
@@ -172,8 +172,11 @@ function openExternalLink(url: string) {
         <!-- 底部提示 -->
         <div class="mt-6 rounded-lg bg-gray-50 p-4 dark:bg-gray-800/50">
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            💡 提示：ChatLab 支持多种聊天记录格式，包括 QQ、微信、Discord
+            💡 提示：ChatLab 支持多种聊天记录格式（.json、.jsonl、.txt），包括 QQ、微信、Discord
             等平台。将导出的文件直接拖拽到导入区域即可开始分析。
+          </p>
+          <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">
+            📦 对于超大规模聊天记录（>100万条），建议使用 JSONL 格式，可避免内存溢出问题。
           </p>
         </div>
       </div>
@@ -200,11 +203,35 @@ function openExternalLink(url: string) {
         <!-- 格式说明 -->
         <div class="max-h-[60vh] space-y-4 overflow-y-auto">
           <p class="text-sm text-gray-600 dark:text-gray-300">
-            ChatLab 定义了一套聊天记录分析用标准 JSON 格式。只需在 JSON 文件中包含
+            ChatLab 定义了一套聊天记录分析用标准格式，支持两种文件格式。只需在文件中包含
             <code class="rounded bg-gray-100 px-1.5 py-0.5 text-pink-600 dark:bg-gray-800 dark:text-pink-400">
               chatlab
             </code>
-            对象即可被识别。以下是完整的格式规范，供开发者参考。
+            对象即可被识别。
+          </p>
+
+          <!-- 格式对比说明 -->
+          <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
+            <div class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">支持的格式</div>
+            <div class="flex gap-4 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="rounded bg-gray-200 px-2 py-0.5 font-mono dark:bg-gray-700">.json</span>
+                <span class="text-gray-600 dark:text-gray-300">标准格式，适合中小型记录</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span
+                  class="rounded bg-blue-100 px-2 py-0.5 font-mono text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
+                >
+                  .jsonl
+                </span>
+                <span class="text-gray-600 dark:text-gray-300">流式格式，支持 GB 级超大文件</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            以下是 JSON 格式规范示例。JSONL 格式规范请参考
+            <code class="rounded bg-gray-100 px-1 dark:bg-gray-700">.docs/guide/chatLabJsonlFormat.md</code>
           </p>
 
           <!-- JSON 示例 -->
@@ -412,15 +439,21 @@ function openExternalLink(url: string) {
         <!-- 底部提示 -->
         <div class="mt-6 space-y-2 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
           <p class="text-sm text-blue-600 dark:text-blue-400">
-            💡 文件名只需以
+            💡 文件名以
             <code class="rounded bg-blue-100 px-1 dark:bg-blue-800">.json</code>
-            结尾，JSON 中包含
+            或
+            <code class="rounded bg-blue-100 px-1 dark:bg-blue-800">.jsonl</code>
+            结尾，包含
             <code class="rounded bg-blue-100 px-1 dark:bg-blue-800">chatlab</code>
             对象即可被识别。
           </p>
           <p class="text-xs text-blue-500 dark:text-blue-400/80">
-            📖 完整格式规范请参考项目文档：
+            📖 JSON 格式规范：
             <code class="rounded bg-blue-100 px-1 dark:bg-blue-800">.docs/guide/chatLabFormat.md</code>
+          </p>
+          <p class="text-xs text-blue-500 dark:text-blue-400/80">
+            📖 JSONL 格式规范：
+            <code class="rounded bg-blue-100 px-1 dark:bg-blue-800">.docs/guide/chatLabJsonlFormat.md</code>
           </p>
         </div>
       </div>

@@ -52,10 +52,10 @@ function ensureOutputDir(dir: string): void {
 /**
  * 生成输出文件名
  */
-function generateOutputFilename(name: string): string {
+function generateOutputFilename(name: string, format: 'json' | 'jsonl' = 'json'): string {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
   const safeName = name.replace(/[/\\?%*:|"<>]/g, '_')
-  return `${safeName}_merged_${date}.json`
+  return `${safeName}_merged_${date}.${format}`
 }
 
 /**
@@ -343,7 +343,7 @@ export async function mergeFilesWithTempDb(
   params: MergeParams,
   tempDbCache: Map<string, string>
 ): Promise<MergeResult> {
-  const { filePaths, outputName, outputDir, conflictResolutions, andAnalyze } = params
+  const { filePaths, outputName, outputDir, outputFormat = 'json', conflictResolutions, andAnalyze } = params
 
   console.log('[Merger] mergeFilesWithTempDb: 开始合并')
   console.log(
@@ -473,35 +473,86 @@ export async function mergeFilesWithTempDb(
       messageCount: reader.getMessageCount(),
     }))
 
-    // 构建 ChatLab 格式
-    const chatLabData: ChatLabFormat = {
-      chatlab: {
-        version: '0.0.1',
-        exportedAt: Math.floor(Date.now() / 1000),
-        generator: 'ChatLab Merge Tool',
-        description: `合并自 ${parseResults.length} 个文件`,
-      },
-      meta: {
-        name: outputName,
-        platform: platform as ChatPlatform,
-        type: parseResults[0].meta.type as ChatType,
-        sources,
-        groupId,
-        groupAvatar,
-      },
-      members: Array.from(memberMap.values()),
-      messages: mergedMessages,
+    // 构建 ChatLab 格式数据
+    const chatLabHeader = {
+      version: '0.0.1',
+      exportedAt: Math.floor(Date.now() / 1000),
+      generator: 'ChatLab Merge Tool',
+      description: `合并自 ${parseResults.length} 个文件`,
     }
 
-    // 写入文件（格式化 JSON，便于阅读）
+    const chatLabMeta = {
+      name: outputName,
+      platform: platform as ChatPlatform,
+      type: parseResults[0].meta.type as ChatType,
+      sources,
+      groupId,
+      groupAvatar,
+    }
+
+    const chatLabMembers = Array.from(memberMap.values())
+
+    // 写入文件
     const targetDir = outputDir || getDefaultOutputDir()
     ensureOutputDir(targetDir)
-    const filename = generateOutputFilename(outputName)
+    const filename = generateOutputFilename(outputName, outputFormat)
     const outputPath = path.join(targetDir, filename)
 
     const writeStartTime = Date.now()
-    fs.writeFileSync(outputPath, JSON.stringify(chatLabData, null, 2), 'utf-8')
-    console.log(`[Merger] 写入文件耗时: ${Date.now() - writeStartTime}ms`)
+
+    if (outputFormat === 'jsonl') {
+      // JSONL 格式：流式写入，每行一个 JSON 对象
+      const writeStream = fs.createWriteStream(outputPath, { encoding: 'utf-8' })
+
+      // 写入 header 行
+      writeStream.write(
+        JSON.stringify({
+          _type: 'header',
+          chatlab: chatLabHeader,
+          meta: chatLabMeta,
+        }) + '\n'
+      )
+
+      // 写入 member 行
+      for (const member of chatLabMembers) {
+        writeStream.write(
+          JSON.stringify({
+            _type: 'member',
+            ...member,
+          }) + '\n'
+        )
+      }
+
+      // 写入 message 行
+      for (const msg of mergedMessages) {
+        writeStream.write(
+          JSON.stringify({
+            _type: 'message',
+            ...msg,
+          }) + '\n'
+        )
+      }
+
+      writeStream.end()
+
+      // 等待写入完成
+      await new Promise<void>((resolve, reject) => {
+        writeStream.on('finish', resolve)
+        writeStream.on('error', reject)
+      })
+
+      console.log(`[Merger] 写入 JSONL 文件耗时: ${Date.now() - writeStartTime}ms`)
+    } else {
+      // JSON 格式：格式化输出
+      const chatLabData: ChatLabFormat = {
+        chatlab: chatLabHeader,
+        meta: chatLabMeta,
+        members: chatLabMembers,
+        messages: mergedMessages,
+      }
+      fs.writeFileSync(outputPath, JSON.stringify(chatLabData, null, 2), 'utf-8')
+      console.log(`[Merger] 写入 JSON 文件耗时: ${Date.now() - writeStartTime}ms`)
+    }
     console.log(`[Merger] 总合并耗时: ${Date.now() - startTime}ms`)
 
     // 如果需要分析，导入数据库
@@ -510,19 +561,19 @@ export async function mergeFilesWithTempDb(
       const importStartTime = Date.now()
       const parseResult: ParseResult = {
         meta: {
-          name: chatLabData.meta.name,
-          platform: chatLabData.meta.platform,
-          type: chatLabData.meta.type,
-          groupId: chatLabData.meta.groupId,
-          groupAvatar: chatLabData.meta.groupAvatar,
+          name: chatLabMeta.name,
+          platform: chatLabMeta.platform,
+          type: chatLabMeta.type,
+          groupId: chatLabMeta.groupId,
+          groupAvatar: chatLabMeta.groupAvatar,
         },
-        members: chatLabData.members.map((m) => ({
+        members: chatLabMembers.map((m) => ({
           platformId: m.platformId,
           accountName: m.accountName,
           groupNickname: m.groupNickname,
           avatar: m.avatar,
         })),
-        messages: chatLabData.messages.map((msg) => ({
+        messages: mergedMessages.map((msg) => ({
           senderPlatformId: msg.sender,
           senderAccountName: msg.accountName,
           senderGroupNickname: msg.groupNickname,
