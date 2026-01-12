@@ -116,9 +116,6 @@ class MainProcess {
       },
     })
 
-    // 设置默认日间模式
-    nativeTheme.themeSource = 'light'
-
     this.mainWindow.once('ready-to-show', () => {
       this.mainWindow?.show()
     })

@@ -53,6 +53,12 @@ export function registerWindowHandlers(ctx: IpcContext): void {
     win.webContents.openDevTools()
   })
 
+  // 设置主题模式
+  ipcMain.on('window:setThemeSource', (_, mode: 'system' | 'light' | 'dark') => {
+    const { nativeTheme } = require('electron')
+    nativeTheme.themeSource = mode
+  })
+
   // ==================== 应用信息 ====================
   ipcMain.handle('app:getVersion', () => {
     return app.getVersion()

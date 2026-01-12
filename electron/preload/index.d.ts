@@ -110,6 +110,7 @@ interface Api {
   send: (channel: string, data?: unknown) => void
   receive: (channel: string, func: (...args: unknown[]) => void) => void
   removeListener: (channel: string, func: (...args: unknown[]) => void) => void
+  setThemeSource: (mode: 'system' | 'light' | 'dark') => void
   dialog: {
     showOpenDialog: (options: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>
   }

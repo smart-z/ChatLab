@@ -56,6 +56,9 @@ const api = {
   removeListener: (channel: string, func: (...args: unknown[]) => void) => {
     ipcRenderer.removeListener(channel, func)
   },
+  setThemeSource: (mode: 'system' | 'light' | 'dark') => {
+    ipcRenderer.send('window:setThemeSource', mode)
+  },
 }
 
 // Chat Analysis API

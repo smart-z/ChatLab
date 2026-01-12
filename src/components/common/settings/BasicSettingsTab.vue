@@ -42,6 +42,17 @@ const currentLocale = computed({
   get: () => locale.value,
   set: (val: LocaleType) => settingsStore.setLocale(val),
 })
+
+// Sync theme with main process
+import { watch } from 'vue'
+watch(
+  colorMode,
+  (val) => {
+    const mode = val === 'auto' ? 'system' : (val as 'light' | 'dark')
+    window.api.setThemeSource(mode)
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
