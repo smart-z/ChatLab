@@ -3,9 +3,9 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MessageType } from '@/types/base'
 import { getMessageTypeName } from '@/types/base'
-import type { HourlyActivity, WeekdayActivity, MonthlyActivity } from '@/types/analysis'
-import { EChartPie, EChartBar, EChartHeatmap } from '@/components/charts'
-import type { EChartPieData, EChartBarData, EChartHeatmapData } from '@/components/charts'
+import type { HourlyActivity, WeekdayActivity, MonthlyActivity, DailyActivity } from '@/types/analysis'
+import { EChartPie, EChartBar, EChartHeatmap, EChartCalendar } from '@/components/charts'
+import type { EChartPieData, EChartBarData, EChartHeatmapData, EChartCalendarData } from '@/components/charts'
 import { SectionCard } from '@/components/UI'
 
 const { t } = useI18n()
@@ -33,6 +33,7 @@ const hourlyActivity = ref<HourlyActivity[]>([])
 const weekdayActivity = ref<WeekdayActivity[]>([])
 const monthlyActivity = ref<MonthlyActivity[]>([])
 const yearlyActivity = ref<Array<{ year: number; messageCount: number }>>([])
+const dailyActivity = ref<DailyActivity[]>([])
 const lengthDetail = ref<Array<{ len: number; count: number }>>([])
 const lengthGrouped = ref<Array<{ range: string; count: number }>>([])
 
@@ -204,6 +205,33 @@ const heatmapChartData = computed<EChartHeatmapData>(() => {
   return { xLabels, yLabels, data }
 })
 
+// 日历热力图数据（GitHub 贡献图风格）
+const calendarChartData = computed<EChartCalendarData[]>(() => {
+  return dailyActivity.value.map((d) => ({
+    date: d.date,
+    value: d.messageCount,
+  }))
+})
+
+// 日历热力图可用年份
+const calendarYears = computed(() => {
+  const years = new Set<number>()
+  dailyActivity.value.forEach((d) => {
+    const year = parseInt(d.date.split('-')[0])
+    if (!isNaN(year)) years.add(year)
+  })
+  return Array.from(years).sort((a, b) => b - a) // 降序排列
+})
+
+// 当前选中的日历年份
+const selectedCalendarYear = ref<number>(new Date().getFullYear())
+
+// 过滤当前年份的日历数据
+const filteredCalendarData = computed(() => {
+  const year = selectedCalendarYear.value
+  return calendarChartData.value.filter((d) => d.date.startsWith(`${year}-`))
+})
+
 // 合并 timeFilter 和 memberId 的 filter
 const effectiveFilter = computed(() => ({
   ...props.timeFilter,
@@ -217,12 +245,13 @@ async function loadData() {
   isLoading.value = true
   try {
     const filter = effectiveFilter.value
-    const [types, hourly, weekday, monthly, yearly, lengthData] = await Promise.all([
+    const [types, hourly, weekday, monthly, yearly, daily, lengthData] = await Promise.all([
       window.chatApi.getMessageTypeDistribution(props.sessionId, filter),
       window.chatApi.getHourlyActivity(props.sessionId, filter),
       window.chatApi.getWeekdayActivity(props.sessionId, filter),
       window.chatApi.getMonthlyActivity(props.sessionId, filter),
       window.chatApi.getYearlyActivity(props.sessionId, filter),
+      window.chatApi.getDailyActivity(props.sessionId, filter),
       window.chatApi.getMessageLengthDistribution(props.sessionId, filter),
     ])
 
@@ -231,8 +260,14 @@ async function loadData() {
     weekdayActivity.value = weekday
     monthlyActivity.value = monthly
     yearlyActivity.value = yearly
+    dailyActivity.value = daily
     lengthDetail.value = lengthData.detail
     lengthGrouped.value = lengthData.grouped
+
+    // 自动选择最新的年份
+    if (calendarYears.value.length > 0) {
+      selectedCalendarYear.value = calendarYears.value[0]
+    }
   } catch (error) {
     console.error('加载消息视图数据失败:', error)
   } finally {
@@ -355,16 +390,6 @@ watch(
         </SectionCard>
       </div>
 
-      <!-- 时间热力图 -->
-      <SectionCard :title="t('timeHeatmap')" :show-divider="false">
-        <template #headerRight>
-          <span class="text-xs text-gray-400">{{ t('heatmapHint') }}</span>
-        </template>
-        <div class="p-5">
-          <EChartHeatmap :data="heatmapChartData" :height="320" />
-        </div>
-      </SectionCard>
-
       <!-- 消息长度分布（左右两图） -->
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <!-- 左侧：1-25字逐字分布 -->
@@ -402,12 +427,39 @@ watch(
         </SectionCard>
       </div>
 
-      <!-- 双方类型对比 (占位) -->
-      <SectionCard :title="t('memberTypeComparison')" :show-divider="false">
-        <div class="flex h-48 items-center justify-center">
-          <div class="text-center">
-            <UIcon name="i-heroicons-user-group" class="mx-auto h-10 w-10 text-gray-300 dark:text-gray-600" />
-            <p class="mt-2 text-sm text-gray-400">{{ t('comingSoon') }}</p>
+      <!-- 时间热力图 -->
+      <SectionCard :title="t('timeHeatmap')" :show-divider="false">
+        <template #headerRight>
+          <span class="text-xs text-gray-400">{{ t('heatmapHint') }}</span>
+        </template>
+        <div class="p-5">
+          <EChartHeatmap :data="heatmapChartData" :height="320" />
+        </div>
+      </SectionCard>
+
+      <!-- 日历热力图（GitHub 贡献图风格） -->
+      <SectionCard :title="t('calendarHeatmap')" :show-divider="false">
+        <template #headerRight>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-400">{{ t('calendarHint') }}</span>
+            <USelect
+              v-if="calendarYears.length > 1"
+              v-model="selectedCalendarYear"
+              :items="calendarYears.map((y) => ({ value: y, label: String(y) }))"
+              size="xs"
+              class="w-20"
+            />
+          </div>
+        </template>
+        <div class="p-5">
+          <EChartCalendar
+            v-if="filteredCalendarData.length > 0"
+            :data="filteredCalendarData"
+            :year="selectedCalendarYear"
+            :height="180"
+          />
+          <div v-else class="flex h-32 items-center justify-center text-gray-400">
+            {{ t('noData') }}
           </div>
         </div>
       </SectionCard>
@@ -425,14 +477,14 @@ watch(
     "yearlyDistribution": "年份分布",
     "timeHeatmap": "时间热力图",
     "heatmapHint": "展示聊天时间规律",
+    "calendarHeatmap": "消息日历",
+    "calendarHint": "每日消息分布",
     "lengthDetailTitle": "短消息分布 (1-25字)",
     "lengthDetailHint": "逐字统计",
     "lengthGroupedTitle": "长度区间分布",
     "lengthGroupedHint": "每5字一组",
     "noTextMessages": "暂无文字消息",
-    "memberTypeComparison": "双方类型对比",
     "noData": "暂无数据",
-    "comingSoon": "功能开发中...",
     "weekdays": {
       "sun": "周日",
       "mon": "周一",
@@ -465,14 +517,14 @@ watch(
     "yearlyDistribution": "Yearly Distribution",
     "timeHeatmap": "Time Heatmap",
     "heatmapHint": "Shows chat time patterns",
+    "calendarHeatmap": "Message Calendar",
+    "calendarHint": "Daily message distribution",
     "lengthDetailTitle": "Short Messages (1-25 chars)",
     "lengthDetailHint": "Per character",
     "lengthGroupedTitle": "Length Range Distribution",
     "lengthGroupedHint": "Grouped by 5",
     "noTextMessages": "No text messages",
-    "memberTypeComparison": "Member Type Comparison",
     "noData": "No data",
-    "comingSoon": "Coming soon...",
     "weekdays": {
       "sun": "Sun",
       "mon": "Mon",
