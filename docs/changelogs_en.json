@@ -1,5 +1,37 @@
 [
   {
+    "version": "0.11.0",
+    "date": "2026-02-13",
+    "summary": "Add Telegram import, improve incremental import UX, strengthen i18n coverage, and fix indexing and page flicker issues.",
+    "changes": [
+      {
+        "type": "feat",
+        "items": [
+          "Expand i18n support across AI calls, logs, and main-process configuration.",
+          "Add support for importing Telegram chat history.",
+          "Improve the incremental import flow and related copy.",
+          "Improve the interaction flow when opening protocol links."
+        ]
+      },
+      {
+        "type": "fix",
+        "items": [
+          "Fix index invalidation after incremental imports (resolve #81).",
+          "Fix WhatsApp iPhone-exported chats not being recognized (resolve #82).",
+          "Fix a double-flicker issue when switching to the chat page."
+        ]
+      },
+      {
+        "type": "chore",
+        "items": [
+          "Optimize TypeScript configuration.",
+          "Adjust i18n build configuration.",
+          "Improve skill-related project configuration."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.10.0",
     "date": "2026-02-11",
     "summary": "Add interaction frequency analysis, improve the session query pipeline, and fix issues in incremental indexing and database scanning.",
