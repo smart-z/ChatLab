@@ -41,8 +41,8 @@ defineProps<{
       <!-- 中间拖拽占位符 - 填充中间空白区域 -->
       <div class="flex-1 self-stretch mx-4" style="-webkit-app-region: drag" />
 
-      <!-- 右侧操作区域 -->
-      <div class="flex items-center gap-2">
+      <!-- 右侧操作区域 - Windows 上需要右侧留白避开 titleBarOverlay 按钮 -->
+      <div class="header-actions flex items-center gap-2">
         <slot name="actions" />
       </div>
     </div>
@@ -51,3 +51,11 @@ defineProps<{
     <slot />
   </div>
 </template>
+
+<style scoped>
+/* Windows/Linux: 右侧操作按钮需要避开 titleBarOverlay 原生窗口控制按钮（约 140px 宽） */
+:global(.platform-windows) .header-actions,
+:global(.platform-linux) .header-actions {
+  padding-right: var(--titlebar-overlay-width, 140px);
+}
+</style>

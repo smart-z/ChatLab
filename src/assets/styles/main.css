@@ -51,6 +51,12 @@
   background-color: var(--color-gray-600);
 }
 
+/* Windows/Linux 标题栏 overlay 按钮宽度（3个按钮 × 46px ≈ 138px，留安全余量） */
+.platform-windows,
+.platform-linux {
+  --titlebar-overlay-width: 140px;
+}
+
 /* 禁用窗口拖拽区域 - 用于弹窗等需要正常交互的元素 */
 .app-region-no-drag {
   -webkit-app-region: no-drag;
